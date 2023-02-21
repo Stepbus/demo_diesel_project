@@ -1,0 +1,63 @@
+version: "3.7"
+
+services:
+  rabbitmq_server:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_server
+    hostname: rabbithostname
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: on-failure
+
+  mongo_mongodb:
+    image: mongo:latest
+    container_name: mongo_mongodb
+    hostname: mongohostname
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+    volumes:
+      - ./mongodb_data_volume:/data/db
+    ports:
+      - "27017:27017"
+    restart: always
+
+  worker:
+    build:
+      context: .
+    container_name: celery-worker
+    environment:
+      - BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbithostname:5672//
+      - MONGO_URL_CONNECTION_STR=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongohostname:27017/
+    command: sh -c "sleep 8; celery -A module_celery.celery_app worker -f LOGGING.log --loglevel=INFO"
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq_server
+
+  beat:
+    build:
+      context: .
+    container_name: celery-beat
+    environment:
+      - BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbithostname:5672//
+      - MONGO_URL_CONNECTION_STR=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongohostname:27017/
+    command: sh -c "sleep 10; celery -A module_celery.celery_app beat --loglevel=INFO"
+    volumes:
+      - .:/app
+    depends_on:
+      - worker
+  redis:
+    image: 'bitnami/redis:latest'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+
+
+volumes:
+  mongodb_data_volume:
+    driver: local
+
