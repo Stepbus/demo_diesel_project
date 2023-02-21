@@ -50,7 +50,6 @@ def loves_task():
 
 @app.task(name="update_base")
 def update_base():
-    print("HELLO")
     tasks = [petro_task,
              pilot_task,
              loves_task
