@@ -1,11 +1,18 @@
-Parsers for getting data from three resources with fuel prices.
+Description:
 
-The date is stored in the Mongo database.
+    Parsers to obtain data from three resources with fuel prices.
+    To get up-to-date data, the bot receives new prices every morning 
+    and saves them in the database. 
+    To do this, daily tasks are created and run to update the data 
+    in the database or add new data
 
-Using libraries for data parsing: requests, aiohttp, asyncio
 
-Tasks that run once a day and update data in the database or add new data
+TECHNOLOGY STACK:
 
-Using Proxy Manager to Rotate Proxies in Redis
-
-Using docker and docker-compose
+    Mongo
+    Redis
+    Celery
+    Requests
+    Aiohttp
+    Asyncio
+    Docker
